@@ -1,0 +1,1 @@
+- [pnpm script arguments](pnpm-script-argv.md) — workspace scripts may receive the argument-forwarding `--`; CLI parsers should handle it.
