@@ -3,116 +3,919 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f5f7fb" />
-    <title>PayPal Autonomous OS</title>
+    <meta name="theme-color" content="#edf3fb" />
+    <meta name="description" content="Mesh OS — an independent sandbox for reviewing simulated autonomous workflows." />
+    <title>Mesh OS — Operator console</title>
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
+
       :root {
         color-scheme: light;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: #17243a;
-        background: #f5f7fb;
+        --ink: #122748;
+        --muted: #60728d;
+        --blue: #205bd7;
+        --blue-dark: #1746ad;
+        --blue-soft: #e6efff;
+        --canvas: #edf3fb;
+        --paper: #fbfdff;
+        --line: #d8e2f0;
+        --lime: #d6f178;
+        --coral: #f17b62;
+        --green: #267b61;
+        --red: #b3493e;
+        --display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+        --mono: "DM Mono", ui-monospace, monospace;
+        font-family: var(--display);
+        color: var(--ink);
+        background: var(--canvas);
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
       }
 
-      * {
-        box-sizing: border-box;
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { min-width: 320px; min-height: 100vh; margin: 0; }
+      button, input, textarea { font: inherit; }
+      button { cursor: pointer; }
+      button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible {
+        outline: 3px solid #e0a82d;
+        outline-offset: 3px;
       }
+      a { color: inherit; text-decoration: none; }
 
-      body {
-        min-height: 100vh;
-        margin: 0;
-        display: grid;
-        place-items: center;
-        padding: 24px;
+      .app-shell { min-height: 100dvh; }
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 5;
+        display: flex;
+        width: 248px;
+        flex-direction: column;
+        padding: 28px 18px 20px;
+        border-right: 1px solid #d6e1f0;
+        background: #e8f0fa;
       }
-
-      main {
-        width: min(100%, 720px);
-        padding: clamp(28px, 6vw, 56px);
-        border: 1px solid #dfe6f0;
-        border-radius: 24px;
-        background: #fff;
-        box-shadow: 0 24px 70px rgb(27 50 88 / 8%);
-      }
-
-      .eyebrow {
-        color: #1269a8;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      h1 {
-        margin: 14px 0 12px;
-        font-size: clamp(2rem, 6vw, 3.5rem);
-        line-height: 1.05;
-        letter-spacing: -0.045em;
-      }
-
-      p {
-        max-width: 54ch;
-        color: #526178;
-        font-size: 1.05rem;
-        line-height: 1.7;
-      }
-
-      .status {
-        display: inline-flex;
+      .brand {
+        display: flex;
         align-items: center;
-        gap: 9px;
-        margin-top: 20px;
-        padding: 9px 13px;
-        border: 1px solid #cdebdc;
-        border-radius: 999px;
-        color: #176c43;
-        background: #effaf4;
-        font-size: 0.9rem;
-        font-weight: 650;
+        gap: 12px;
+        padding: 1px 9px 32px;
+      }
+      .brand-mark {
+        position: relative;
+        width: 36px;
+        height: 36px;
+        overflow: hidden;
+        border-radius: 12px;
+        background: var(--blue);
+        box-shadow: inset 0 -4px 0 rgb(13 42 107 / 18%);
+      }
+      .brand-mark::before, .brand-mark::after {
+        position: absolute;
+        width: 19px;
+        height: 6px;
+        border-radius: 9px;
+        background: var(--lime);
+        content: "";
+        transform: rotate(-42deg);
+      }
+      .brand-mark::before { top: 11px; left: 5px; }
+      .brand-mark::after { top: 20px; left: 13px; width: 15px; background: #f6fbff; }
+      .brand-name { display: block; font-size: 1.01rem; font-weight: 800; letter-spacing: -.045em; }
+      .brand-sub { display: block; margin-top: 1px; color: var(--muted); font: 500 .63rem var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+      .nav-caption { padding: 0 12px 10px; color: #8090a7; font: 500 .64rem var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+      .nav-list { display: grid; gap: 5px; }
+      .nav-link {
+        display: flex;
+        min-height: 43px;
+        align-items: center;
+        gap: 12px;
+        padding: 0 12px;
+        border: 1px solid transparent;
+        border-radius: 11px;
+        color: #5a6e8b;
+        font-size: .81rem;
+        font-weight: 700;
+        transition: color .18s ease, background .18s ease, transform .18s ease;
+      }
+      .nav-link:hover { color: var(--blue-dark); background: #f4f8fd; transform: translateX(2px); }
+      .nav-link.active { border-color: #d8e5fa; color: var(--blue-dark); background: #f8fbff; }
+      .nav-icon { display: grid; width: 19px; place-items: center; color: currentColor; }
+      .nav-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+      .side-spacer { flex: 1; }
+      .side-note { padding: 15px 14px; border: 1px solid #d1deee; border-radius: 14px; background: #eff5fc; }
+      .side-note strong { display: block; margin-bottom: 6px; font-size: .74rem; }
+      .side-note p { margin: 0; color: var(--muted); font-size: .69rem; line-height: 1.55; }
+      .side-foot { padding: 15px 12px 0; color: #8796ab; font: .61rem var(--mono); letter-spacing: .06em; }
+
+      .main { max-width: 1600px; min-height: 100dvh; margin-left: 248px; padding: 0 40px 48px; }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+        display: flex;
+        min-height: 72px;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgb(203 216 233 / 78%);
+        background: rgb(237 243 251 / 92%);
+        backdrop-filter: blur(16px);
+      }
+      .crumb { display: flex; align-items: center; gap: 9px; color: #7b8ca4; font: 500 .68rem var(--mono); letter-spacing: .04em; }
+      .crumb-current { color: var(--ink); }
+      .top-actions { display: flex; align-items: center; gap: 12px; }
+      .env-pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid #ccdbef; border-radius: 8px; color: #375272; background: #f6f9fd; font: 500 .62rem var(--mono); letter-spacing: .04em; }
+      .env-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); }
+      .operator {
+        display: grid; width: 34px; height: 34px; place-items: center;
+        border: 1px solid #c7d6e9; border-radius: 50%; color: var(--blue-dark);
+        background: #dce9fb; font: 500 .65rem var(--mono);
       }
 
-      .dot {
-        width: 8px;
-        height: 8px;
+      .notice {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin: 22px 0 30px;
+        padding: 14px 17px;
+        border: 1px solid #e9d493;
+        border-radius: 12px;
+        background: #fff7db;
+        color: #665222;
+      }
+      .notice-mark { display: grid; flex: 0 0 21px; width: 21px; height: 21px; place-items: center; border-radius: 50%; background: #e9d493; color: #5e4a19; font: 700 .73rem var(--mono); }
+      .notice p { margin: 0; font-size: .72rem; line-height: 1.6; }
+      .notice strong { font-weight: 800; }
+
+      .hero {
+        position: relative;
+        display: grid;
+        min-height: 247px;
+        grid-template-columns: minmax(0, 1fr) 220px;
+        align-items: center;
+        gap: 24px;
+        overflow: hidden;
+        padding: 32px 38px;
+        border-radius: 20px;
+        background: var(--blue);
+        color: #f7faff;
+        isolation: isolate;
+      }
+      .hero::before {
+        position: absolute;
+        z-index: -1;
+        top: -115px;
+        right: 60px;
+        width: 390px;
+        height: 390px;
+        border: 1px solid rgb(230 241 255 / 14%);
         border-radius: 50%;
-        background: #1e9b5f;
+        box-shadow: 0 0 0 33px rgb(230 241 255 / 5%), 0 0 0 74px rgb(230 241 255 / 4%);
+        content: "";
       }
+      .hero-kicker { display: flex; align-items: center; gap: 9px; margin-bottom: 17px; color: #c4d7ff; font: 500 .65rem var(--mono); letter-spacing: .11em; text-transform: uppercase; }
+      .hero-kicker::before { width: 7px; height: 7px; border-radius: 2px; background: var(--lime); content: ""; transform: rotate(45deg); }
+      .hero h1 { max-width: 650px; margin: 0; font-size: clamp(2rem, 4.3vw, 3.55rem); font-weight: 600; letter-spacing: -.075em; line-height: 1.04; }
+      .hero h1 span { color: var(--lime); }
+      .hero-copy { max-width: 470px; margin: 13px 0 0; color: #d3e0fb; font-size: .85rem; line-height: 1.65; }
+      .hero-side { display: flex; flex-direction: column; align-items: flex-start; justify-self: end; gap: 13px; }
+      .orbit {
+        display: grid; width: 126px; height: 126px; place-items: center;
+        border: 1px solid rgb(255 255 255 / 26%); border-radius: 50%;
+        background: radial-gradient(circle, rgb(255 255 255 / 11%) 0 34%, transparent 35% 100%);
+      }
+      .orbit-inner { position: relative; display: grid; width: 61px; height: 61px; place-items: center; border: 1px solid rgb(255 255 255 / 40%); border-radius: 19px; transform: rotate(45deg); }
+      .orbit-inner::before, .orbit-inner::after { position: absolute; width: 11px; height: 11px; border-radius: 4px; background: var(--lime); content: ""; }
+      .orbit-inner::before { top: -6px; right: 8px; }
+      .orbit-inner::after { bottom: 8px; left: -6px; background: #f5f8ff; }
+      .orbit-core { width: 17px; height: 17px; border: 3px solid var(--lime); border-radius: 6px; }
+      .hero-caption { color: #c4d7ff; font: .6rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 
-      .note {
-        margin-top: 28px;
-        padding-top: 20px;
-        border-top: 1px solid #e8edf4;
-        font-size: 0.9rem;
+      .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 37px 0 16px; }
+      .section-heading h2 { margin: 0; font-size: 1.17rem; font-weight: 800; letter-spacing: -.045em; }
+      .section-heading p { margin: 5px 0 0; color: var(--muted); font-size: .75rem; }
+      .local-tag { color: #71849e; font: .61rem var(--mono); letter-spacing: .04em; }
+      .activity-panel { overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
+      .activity-head { display: grid; grid-template-columns: minmax(180px, 1fr) 125px 180px; gap: 18px; padding: 12px 20px; border-bottom: 1px solid var(--line); color: #8292a8; background: #f5f8fc; font: 500 .61rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+      .activity-list { display: grid; }
+      .activity-row { display: grid; grid-template-columns: minmax(180px, 1fr) 125px 180px; align-items: center; gap: 18px; min-height: 62px; padding: 10px 20px; border-bottom: 1px solid #eaf0f7; }
+      .activity-row:last-child { border-bottom: 0; }
+      .activity-intent { overflow: hidden; color: #294363; font-size: .76rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+      .activity-status { display: inline-flex; width: fit-content; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px; color: #25664f; background: #eaf5ed; font: 500 .59rem var(--mono); }
+      .activity-status.frozen { color: #a04b40; background: #fff0eb; }
+      .activity-status::before { width: 5px; height: 5px; border-radius: 50%; background: currentColor; content: ""; }
+      .activity-time { color: #8190a4; font: .61rem var(--mono); }
+      .empty-state { display: grid; min-height: 116px; place-content: center; justify-items: center; padding: 20px; text-align: center; }
+      .empty-glyph { display: grid; width: 31px; height: 31px; place-items: center; margin-bottom: 8px; border: 1px solid #d6e3f2; border-radius: 10px; color: var(--blue); background: #edf4ff; font: 500 .9rem var(--mono); }
+      .empty-state strong { font-size: .75rem; }
+      .empty-state span { margin-top: 4px; color: #8492a5; font-size: .68rem; }
+
+      .section-label { display: flex; align-items: center; gap: 10px; margin: 44px 0 15px; }
+      .section-label h2 { margin: 0; font-size: 1.15rem; letter-spacing: -.04em; }
+      .section-label span { color: #8090a7; font: .62rem var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+      .workflow-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px; align-items: start; }
+      .workflow-card { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
+      .card-top { display: flex; align-items: flex-start; gap: 13px; padding: 19px 20px 15px; }
+      .card-index { display: grid; flex: 0 0 31px; width: 31px; height: 31px; place-items: center; border-radius: 10px; color: var(--blue-dark); background: var(--blue-soft); font: 500 .64rem var(--mono); }
+      .card-title-wrap { flex: 1; }
+      .card-title-wrap h3 { margin: 1px 0 4px; font-size: .89rem; letter-spacing: -.03em; }
+      .card-title-wrap p { margin: 0; color: var(--muted); font-size: .69rem; line-height: 1.55; }
+      .sim-label { flex: 0 0 auto; padding: 5px 7px; border: 1px solid #e5dba9; border-radius: 5px; color: #806b25; background: #fff9dd; font: 500 .54rem var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+      .form-body { display: grid; gap: 12px; padding: 4px 20px 19px; }
+      .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+      .field { display: grid; gap: 6px; min-width: 0; }
+      .field label { color: #536984; font-size: .66rem; font-weight: 700; }
+      .field label .optional { color: #8a98aa; font-weight: 500; }
+      .field input, .field textarea {
+        width: 100%;
+        min-height: 39px;
+        padding: 9px 11px;
+        border: 1px solid #d7e1ed;
+        border-radius: 8px;
+        color: #193354;
+        background: #fcfdff;
+        font-size: .72rem;
+        transition: border-color .18s ease, box-shadow .18s ease;
+      }
+      .field input::placeholder, .field textarea::placeholder { color: #9aa8b9; }
+      .field input:focus, .field textarea:focus { border-color: #7aa1e9; outline: none; box-shadow: 0 0 0 3px rgb(32 91 215 / 10%); }
+      .field textarea { min-height: 82px; resize: vertical; line-height: 1.5; }
+      .field .hint { color: #8997a9; font-size: .61rem; line-height: 1.45; }
+      details.advanced { border-top: 1px solid #e8eef6; padding-top: 10px; }
+      details.advanced summary { width: fit-content; color: #526985; font-size: .66rem; font-weight: 700; cursor: pointer; }
+      .advanced-content { display: grid; gap: 11px; padding-top: 12px; }
+      .advanced-content .form-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .advanced-content .field input { min-height: 36px; padding: 7px 8px; font-size: .67rem; }
+      .form-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px; }
+      .privacy-note { color: #8b98a8; font-size: .6rem; line-height: 1.4; }
+      .primary-btn {
+        display: inline-flex; min-height: 39px; align-items: center; justify-content: center; gap: 9px;
+        padding: 0 14px; border: 0; border-radius: 8px; color: #fff; background: var(--blue);
+        font-size: .69rem; font-weight: 800; transition: background .18s ease, transform .18s ease;
+      }
+      .primary-btn:hover:not(:disabled) { background: var(--blue-dark); transform: translateY(-1px); }
+      .primary-btn:disabled { cursor: wait; opacity: .65; }
+      .btn-arrow { font-size: .95rem; line-height: 1; }
+      .result-box, .error-box { display: none; margin: 0 20px 18px; padding: 12px 13px; border: 1px solid #c8e1d4; border-radius: 10px; color: #315f4d; background: #edf7f1; }
+      .result-box.visible, .error-box.visible { display: block; animation: reveal .25s ease both; }
+      .error-box { border-color: #efc9c2; color: #88453d; background: #fff2ee; }
+      .result-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: .71rem; font-weight: 800; }
+      .result-heading::before { width: 7px; height: 7px; border-radius: 50%; background: #45936f; content: ""; }
+      .result-box[data-status="FROZEN"] .result-heading::before { background: var(--coral); }
+      .result-copy { margin: 0; font-size: .66rem; line-height: 1.55; overflow-wrap: anywhere; }
+      .result-meta { display: grid; gap: 4px; margin-top: 8px; color: #537563; font: .6rem var(--mono); overflow-wrap: anywhere; }
+      .error-copy { margin: 0; font-size: .67rem; line-height: 1.55; overflow-wrap: anywhere; }
+
+      .report-card { display: grid; grid-template-columns: minmax(250px, .82fr) minmax(0, 1.18fr); gap: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
+      .report-form { padding: 21px; border-right: 1px solid var(--line); }
+      .report-form h3 { margin: 0 0 5px; font-size: .86rem; letter-spacing: -.025em; }
+      .report-form > p { margin: 0 0 17px; color: var(--muted); font-size: .68rem; line-height: 1.55; }
+      .report-output { min-height: 230px; padding: 21px; background: #f8faff; }
+      .output-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 13px; border-bottom: 1px solid #e2eaf4; }
+      .output-top strong { font-size: .72rem; }
+      .output-top span { color: #8190a4; font: .59rem var(--mono); text-transform: uppercase; letter-spacing: .05em; }
+      .output-placeholder { display: grid; min-height: 165px; place-content: center; justify-items: center; text-align: center; }
+      .output-placeholder p { max-width: 255px; margin: 0; color: #7d8ca0; font-size: .68rem; line-height: 1.6; }
+      .summary-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 15px 0; }
+      .summary-stat { padding: 10px; border: 1px solid #e1e9f3; border-radius: 9px; background: #fff; }
+      .summary-stat span { display: block; color: #8190a4; font: .54rem var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+      .summary-stat strong { display: block; margin-top: 6px; color: #244366; font: 500 .91rem var(--mono); overflow-wrap: anywhere; }
+      .totals-table-wrap { overflow-x: auto; }
+      .totals-table { width: 100%; border-collapse: collapse; text-align: left; }
+      .totals-table th { padding: 8px 6px; color: #8190a4; font: 500 .54rem var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+      .totals-table td { padding: 9px 6px; border-top: 1px solid #e5ebf3; color: #35516f; font: .61rem var(--mono); white-space: nowrap; }
+      .no-totals { margin: 9px 0 0; color: #7c8ca0; font-size: .66rem; line-height: 1.5; }
+      .footer { display: flex; justify-content: space-between; gap: 18px; margin-top: 40px; padding-top: 16px; border-top: 1px solid #d7e1ee; color: #8492a5; font-size: .61rem; line-height: 1.6; }
+      .footer strong { color: #627690; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+      @keyframes reveal { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+      @media (min-width: 1500px) { .main { padding-right: 58px; padding-left: 58px; } }
+      @media (max-width: 1120px) {
+        .sidebar { width: 210px; }
+        .main { margin-left: 210px; padding-right: 25px; padding-left: 25px; }
+        .hero { grid-template-columns: minmax(0, 1fr) 165px; }
+        .orbit { width: 110px; height: 110px; }
+        .workflow-grid { gap: 13px; }
+      }
+      @media (max-width: 860px) {
+        .sidebar { position: relative; inset: auto; width: 100%; height: auto; padding: 14px 18px 10px; border-right: 0; border-bottom: 1px solid #d6e1f0; }
+        .brand { padding: 0 2px 12px; }
+        .nav-caption, .side-spacer, .side-note, .side-foot { display: none; }
+        .nav-list { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 1px; }
+        .nav-link { min-height: 37px; flex: 0 0 auto; gap: 8px; padding: 0 10px; font-size: .7rem; }
+        .nav-icon svg { width: 15px; height: 15px; }
+        .main { margin-left: 0; padding-right: 22px; padding-left: 22px; }
+        .topbar { min-height: 60px; }
+        .notice { margin-top: 17px; }
+        .hero { min-height: 220px; padding: 29px; }
+      }
+      @media (max-width: 620px) {
+        .main { padding: 0 15px 30px; }
+        .topbar { min-height: 54px; }
+        .crumb { font-size: .59rem; }
+        .env-pill { padding: 6px 7px; font-size: .52rem; }
+        .top-actions { gap: 7px; }
+        .operator { width: 30px; height: 30px; font-size: .58rem; }
+        .notice { gap: 9px; margin: 13px 0 20px; padding: 11px 12px; }
+        .notice p { font-size: .65rem; }
+        .hero { min-height: 0; grid-template-columns: minmax(0, 1fr); padding: 25px 22px; }
+        .hero h1 { max-width: 380px; font-size: clamp(2.1rem, 10vw, 3.15rem); }
+        .hero-copy { max-width: 390px; font-size: .77rem; }
+        .hero-side { position: absolute; right: 20px; bottom: 19px; opacity: .33; }
+        .orbit { width: 62px; height: 62px; }
+        .orbit-inner { width: 34px; height: 34px; border-radius: 11px; }
+        .orbit-core { width: 10px; height: 10px; border-width: 2px; border-radius: 3px; }
+        .orbit-inner::before, .orbit-inner::after { width: 7px; height: 7px; border-radius: 2px; }
+        .orbit-inner::before { top: -4px; right: 5px; }
+        .orbit-inner::after { bottom: 5px; left: -4px; }
+        .hero-caption { display: none; }
+        .section-heading { align-items: flex-start; flex-direction: column; gap: 5px; margin: 29px 0 12px; }
+        .activity-head { display: none; }
+        .activity-row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 12px 13px; }
+        .activity-intent { grid-column: 1 / -1; white-space: normal; }
+        .activity-status { grid-column: 1; grid-row: 2; }
+        .activity-time { grid-column: 2; grid-row: 2; text-align: right; }
+        .workflow-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+        .section-label { flex-wrap: wrap; margin: 34px 0 12px; }
+        .section-label h2 { font-size: 1.05rem; }
+        .card-top { padding: 16px 15px 13px; }
+        .form-body { padding: 4px 15px 16px; }
+        .result-box, .error-box { margin: 0 15px 15px; }
+        .report-card { grid-template-columns: minmax(0, 1fr); }
+        .report-form { border-right: 0; border-bottom: 1px solid var(--line); padding: 17px; }
+        .report-output { min-height: 200px; padding: 17px; }
+        .summary-overview { gap: 6px; }
+        .summary-stat { padding: 8px; }
+        .summary-stat strong { font-size: .76rem; }
+        .footer { flex-direction: column; gap: 6px; margin-top: 28px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
       }
     </style>
   </head>
   <body>
-    <main>
-      <div class="eyebrow">Starter workspace</div>
-      <h1>PayPal Autonomous OS</h1>
-      <p>
-        The app shell is ready. This starter serves the page and a health endpoint;
-        PayPal workflows have not been connected here yet.
-      </p>
-      <div class="status" role="status">
-        <span class="dot" aria-hidden="true"></span>
-        <span id="service-status">Checking service…</span>
-      </div>
-      <p class="note">
-        PayPal credentials belong in Replit Secrets, not in the local environment file.
-      </p>
-    </main>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary navigation">
+        <a class="brand" href="#overview" aria-label="Mesh OS home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">mesh os</span><span class="brand-sub">operator console</span></span>
+        </a>
+        <div class="nav-caption">Workspace</div>
+        <nav class="nav-list" aria-label="Workspace sections">
+          <a class="nav-link active" href="#overview"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span>Overview</a>
+          <a class="nav-link" href="#runs"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6.5h10M4 12h16M4 17.5h10"/><circle cx="18" cy="6.5" r="2"/><circle cx="16" cy="17.5" r="2"/></svg></span>Recent runs</a>
+          <a class="nav-link" href="#workflows"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/><path d="m10.4 12 1.1 1.1 2.3-2.5"/></svg></span>Workflows</a>
+          <a class="nav-link" href="#reporting"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5h16M6.5 16V9m5 7V4m5 12v-4"/></svg></span>Sandbox summary</a>
+        </nav>
+        <div class="side-spacer"></div>
+        <div class="side-note">
+          <strong>Independent demo</strong>
+          <p>Mesh OS is a hackathon experiment. It is not affiliated with PayPal.</p>
+        </div>
+        <div class="side-foot">MESH OS / SANDBOX 01</div>
+      </aside>
+
+      <main class="main" id="overview">
+        <header class="topbar">
+          <div class="crumb"><span>WORKSPACE</span><span aria-hidden="true">/</span><span class="crumb-current">Overview</span></div>
+          <div class="top-actions">
+            <span class="env-pill"><span class="env-dot" aria-hidden="true"></span>SIMULATION MODE</span>
+            <span class="operator" aria-label="Operator console">OP</span>
+          </div>
+        </header>
+
+        <div class="notice" role="note">
+          <span class="notice-mark" aria-hidden="true">i</span>
+          <p><strong>Independent PayPal AI Hackathon demo, not affiliated with PayPal.</strong> Booking, orchestration and dispute actions are simulations only. No funds move. The summary tool is read-only sandbox reporting.</p>
+        </div>
+
+        <section class="hero" aria-labelledby="hero-title">
+          <div>
+            <div class="hero-kicker">Autonomous workflow lab</div>
+            <h1 id="hero-title">Operations,<br /><span>in motion.</span></h1>
+            <p class="hero-copy">Review sandbox intent runs, model service bookings, route offline escalations and inspect read-only transaction summaries — all from one operator desk.</p>
+          </div>
+          <div class="hero-side" aria-hidden="true">
+            <div class="orbit"><div class="orbit-inner"><div class="orbit-core"></div></div></div>
+            <div class="hero-caption">Connected by intent</div>
+          </div>
+        </section>
+
+        <section id="runs" aria-labelledby="runs-title">
+          <div class="section-heading">
+            <div><h2 id="runs-title">Recent orchestration</h2><p>A small local trail of the intents you have tested.</p></div>
+            <span class="local-tag">BROWSER-LOCAL / LAST 8</span>
+          </div>
+          <div class="activity-panel">
+            <div class="activity-head" aria-hidden="true"><span>Intent</span><span>Result</span><span>Timestamp</span></div>
+            <div class="activity-list" id="activity-list" aria-live="polite"></div>
+          </div>
+          <p class="sr-only" id="activity-status" role="status"></p>
+        </section>
+
+        <section id="workflows" aria-labelledby="workflows-title">
+          <div class="section-label"><h2 id="workflows-title">Workflow controls</h2><span>02 / simulation endpoints</span></div>
+          <div class="workflow-grid">
+            <article class="workflow-card" id="orchestration">
+              <div class="card-top">
+                <span class="card-index">01</span>
+                <div class="card-title-wrap"><h3>Orchestrate an intent</h3><p>Describe a sandbox workflow and inspect its simulated execution plan.</p></div>
+              </div>
+              <form class="form-body" id="orchestrate-form" novalidate>
+                <div class="field">
+                  <label for="user-prompt">Workflow intent</label>
+                  <textarea id="user-prompt" name="userPrompt" maxlength="1200" required placeholder="For example: route a solar co-op payment for review"></textarea>
+                  <span class="hint">Keep it specific. This prompt is sent to the demo endpoint and saved only as a short browser-local run summary.</span>
+                </div>
+                <details class="advanced">
+                  <summary>Optional behavioral signals</summary>
+                  <div class="advanced-content">
+                    <div class="form-row">
+                      <div class="field"><label for="hour-of-day">Hour <span class="optional">(0–23)</span></label><input id="hour-of-day" type="number" min="0" max="23" step="1" inputmode="numeric" placeholder="Optional" /></div>
+                      <div class="field"><label for="stress-index">Stress index <span class="optional">(0–1)</span></label><input id="stress-index" type="number" min="0" max="1" step="0.01" inputmode="decimal" placeholder="Optional" /></div>
+                      <div class="field"><label for="cadence-variance">Cadence variance <span class="optional">(0–1)</span></label><input id="cadence-variance" type="number" min="0" max="1" step="0.01" inputmode="decimal" placeholder="Optional" /></div>
+                    </div>
+                    <span class="hint">Provide all three values or leave all blank. These are simulation inputs, not biometric collection.</span>
+                  </div>
+                </details>
+                <details class="advanced">
+                  <summary>Optional IoT readings</summary>
+                  <div class="advanced-content">
+                    <div class="field"><label for="node-id">Node ID <span class="optional">(optional)</span></label><input id="node-id" maxlength="80" placeholder="e.g. NODE-01" /></div>
+                    <div class="form-row">
+                      <div class="field"><label for="energy-joules">Energy joules</label><input id="energy-joules" type="number" min="0" step="any" inputmode="decimal" placeholder="Optional" /></div>
+                      <div class="field"><label for="water-tds">Water purity TDS</label><input id="water-tds" type="number" min="0" step="any" inputmode="decimal" placeholder="Optional" /></div>
+                    </div>
+                    <span class="hint">Enter both readings to send sensor data. Node ID alone is not sent.</span>
+                  </div>
+                </details>
+                <div class="form-actions"><span class="privacy-note">Run summaries stay in this browser only.</span><button class="primary-btn" type="submit"><span class="btn-label">Run simulation</span><span class="btn-arrow" aria-hidden="true">↗</span></button></div>
+              </form>
+              <div class="error-box" id="orchestrate-error" role="alert"><p class="error-copy"></p></div>
+              <div class="result-box" id="orchestrate-result" aria-live="polite"></div>
+            </article>
+
+            <article class="workflow-card" id="booking">
+              <div class="card-top">
+                <span class="card-index">02</span>
+                <div class="card-title-wrap"><h3>Create a booking</h3><p>Model a service booking response for a sandbox workflow.</p></div>
+                <span class="sim-label">Simulation only</span>
+              </div>
+              <form class="form-body" id="booking-form" novalidate>
+                <div class="form-row">
+                  <div class="field"><label for="client-id">Client ID <span class="optional">(optional)</span></label><input id="client-id" maxlength="100" placeholder="Your reference" /></div>
+                  <div class="field"><label for="freelancer-id">Freelancer ID <span class="optional">(optional)</span></label><input id="freelancer-id" maxlength="100" placeholder="Your reference" /></div>
+                </div>
+                <div class="field"><label for="project-scope">Project scope</label><input id="project-scope" maxlength="240" required placeholder="What is being booked?" /></div>
+                <div class="field"><label for="amount-usd">Amount (USD)</label><input id="amount-usd" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00" /><span class="hint">Demo amount only. No payment is made and no funds are deposited or locked.</span></div>
+                <div class="form-actions"><span class="privacy-note">Personal details are not stored here.</span><button class="primary-btn" type="submit"><span class="btn-label">Create simulation</span><span class="btn-arrow" aria-hidden="true">↗</span></button></div>
+              </form>
+              <div class="error-box" id="booking-error" role="alert"><p class="error-copy"></p></div>
+              <div class="result-box" id="booking-result" aria-live="polite"></div>
+            </article>
+
+            <article class="workflow-card" id="dispute">
+              <div class="card-top">
+                <span class="card-index">03</span>
+                <div class="card-title-wrap"><h3>Offline dispute escalation</h3><p>Preview a simulated ticket in the offline escalation queue.</p></div>
+                <span class="sim-label">Simulation only</span>
+              </div>
+              <form class="form-body" id="dispute-form" novalidate>
+                <div class="field"><label for="transaction-id">Transaction reference <span class="optional">(optional)</span></label><input id="transaction-id" maxlength="120" placeholder="Your reference, if available" /></div>
+                <div class="field"><label for="user-query">What needs attention?</label><textarea id="user-query" maxlength="1000" required placeholder="Describe the issue for the simulated ticket"></textarea></div>
+                <div class="field"><label for="offline-reason">Why is offline support needed?</label><textarea id="offline-reason" maxlength="500" required placeholder="Add a short reason"></textarea></div>
+                <div class="form-actions"><span class="privacy-note">Details are sent to the demo endpoint only.</span><button class="primary-btn" type="submit"><span class="btn-label">Create ticket simulation</span><span class="btn-arrow" aria-hidden="true">↗</span></button></div>
+              </form>
+              <div class="error-box" id="dispute-error" role="alert"><p class="error-copy"></p></div>
+              <div class="result-box" id="dispute-result" aria-live="polite"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="reporting" aria-labelledby="reporting-title">
+          <div class="section-label"><h2 id="reporting-title">Transaction summary</h2><span>04 / read-only sandbox</span></div>
+          <div class="report-card">
+            <form class="report-form" id="summary-form" novalidate>
+              <h3>Generate a date-range report</h3>
+              <p>Request balance-affecting sandbox activity. Dates are sent as UTC calendar dates; a request can cover up to 31 days.</p>
+              <div class="form-body" style="padding:0">
+                <div class="form-row">
+                  <div class="field"><label for="start-date">Start date (UTC)</label><input id="start-date" type="date" required /></div>
+                  <div class="field"><label for="end-date">End date (UTC)</label><input id="end-date" type="date" required /></div>
+                </div>
+                <span class="hint">No totals are shown until the read-only sandbox endpoint returns them.</span>
+                <div class="form-actions"><span class="privacy-note">Up to 31 days per request.</span><button class="primary-btn" type="submit"><span class="btn-label">Generate summary</span><span class="btn-arrow" aria-hidden="true">↗</span></button></div>
+              </div>
+              <div class="error-box" id="summary-error" role="alert" style="margin:14px 0 0"><p class="error-copy"></p></div>
+            </form>
+            <div class="report-output" aria-live="polite" aria-atomic="true">
+              <div class="output-top"><strong>Report output</strong><span id="report-state">Awaiting request</span></div>
+              <div id="summary-output" class="output-placeholder"><p>Choose a date range to fetch read-only sandbox data. No sample transactions or totals are preloaded.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <span><strong>Mesh OS</strong> is an independent PayPal AI Hackathon demo and is not affiliated with PayPal.</span>
+          <span>Simulated actions do not move funds.</span>
+        </footer>
+      </main>
+    </div>
+
     <script>
-      fetch("/health")
-        .then((response) => {
-          if (!response.ok) throw new Error("Health check failed");
-          return response.json();
-        })
-        .then(() => {
-          document.querySelector("#service-status").textContent = "Node.js service is running";
-        })
-        .catch(() => {
-          document.querySelector("#service-status").textContent = "Service status unavailable";
+      (() => {
+        "use strict";
+        const STORAGE_KEY = "mesh-os-recent-runs-v1";
+        const activityList = document.getElementById("activity-list");
+        const activityStatus = document.getElementById("activity-status");
+        const navLinks = Array.from(document.querySelectorAll(".nav-link"));
+
+        function element(tag, className, text) {
+          const node = document.createElement(tag);
+          if (className) node.className = className;
+          if (text !== undefined) node.textContent = text;
+          return node;
+        }
+
+        function readRuns() {
+          try {
+            const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            if (!Array.isArray(stored)) return [];
+            return stored.filter((item) => item && typeof item.intent === "string" && (item.status === "SUCCESS" || item.status === "FROZEN") && typeof item.timestamp === "string").slice(0, 8);
+          } catch {
+            return [];
+          }
+        }
+
+        function formatDate(value) {
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return value;
+          return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+        }
+
+        function renderRuns() {
+          const runs = readRuns();
+          activityList.replaceChildren();
+          if (!runs.length) {
+            const empty = element("div", "empty-state");
+            empty.append(element("span", "empty-glyph", "↗"));
+            empty.append(element("strong", "", "No runs in this browser yet"));
+            empty.append(element("span", "", "Your orchestration summaries will appear here after a simulation."));
+            activityList.append(empty);
+            return;
+          }
+          runs.forEach((run) => {
+            const row = element("div", "activity-row");
+            row.append(element("span", "activity-intent", run.intent));
+            const status = element("span", "activity-status" + (run.status === "FROZEN" ? " frozen" : ""), run.status === "FROZEN" ? "FROZEN" : "SUCCESS");
+            row.append(status);
+            row.append(element("time", "activity-time", formatDate(run.timestamp)));
+            activityList.append(row);
+          });
+        }
+
+        function saveRun(intent, status) {
+          const runs = readRuns();
+          runs.unshift({ intent: intent.slice(0, 160), status, timestamp: new Date().toISOString() });
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(runs.slice(0, 8)));
+            activityStatus.textContent = "Orchestration summary saved in this browser only.";
+          } catch {
+            activityStatus.textContent = "Orchestration completed, but browser storage is unavailable.";
+          }
+          renderRuns();
+        }
+
+        function setError(id, message) {
+          const box = document.getElementById(id + "-error");
+          box.querySelector(".error-copy").textContent = message;
+          box.classList.add("visible");
+        }
+
+        function clearError(id) {
+          const box = document.getElementById(id + "-error");
+          box.classList.remove("visible");
+          box.querySelector(".error-copy").textContent = "";
+        }
+
+        function showResult(id, title, lines, status) {
+          const box = document.getElementById(id + "-result");
+          box.replaceChildren();
+          box.dataset.status = status || "SUCCESS";
+          box.append(element("p", "result-heading", title));
+          lines.forEach((line) => box.append(element("p", "result-copy", line)));
+          box.classList.add("visible");
+        }
+
+        function setBusy(form, busy, label) {
+          const button = form.querySelector('button[type="submit"]');
+          button.disabled = busy;
+          button.querySelector(".btn-label").textContent = busy ? "Working…" : label;
+          form.setAttribute("aria-busy", busy ? "true" : "false");
+        }
+
+        async function postJson(path, payload) {
+          let response;
+          try {
+            response = await fetch(path, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Accept": "application/json" },
+              body: JSON.stringify(payload)
+            });
+          } catch {
+            throw new Error("Could not reach the same-origin demo service. Check your connection and try again.");
+          }
+          let data;
+          try {
+            data = await response.json();
+          } catch {
+            throw new Error("The service returned an unreadable response. Please try again.");
+          }
+          if (!response.ok) {
+            const message = typeof data.message === "string" ? data.message : typeof data.error === "string" ? data.error : "The request was not accepted.";
+            throw new Error(message);
+          }
+          return data;
+        }
+
+        function numericValue(id) {
+          const value = document.getElementById(id).value.trim();
+          return value === "" ? null : Number(value);
+        }
+
+        function inputError(input, message) {
+          input.setCustomValidity(message);
+          input.reportValidity();
+          input.addEventListener("input", () => input.setCustomValidity(""), { once: true });
+        }
+
+        function onSubmit(form, handler) {
+          form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            clearError(form.id.replace("-form", ""));
+            await handler(form);
+          });
+        }
+
+        onSubmit(document.getElementById("orchestrate-form"), async (form) => {
+          const prompt = document.getElementById("user-prompt").value.trim();
+          if (!prompt) {
+            inputError(document.getElementById("user-prompt"), "Enter a workflow intent before running a simulation.");
+            return;
+          }
+          const telemetryIds = ["hour-of-day", "stress-index", "cadence-variance"];
+          const telemetryValues = telemetryIds.map(numericValue);
+          const telemetryAny = telemetryValues.some((value) => value !== null);
+          if (telemetryAny && telemetryValues.some((value) => value === null)) {
+            inputError(document.getElementById(telemetryIds[telemetryValues.findIndex((value) => value === null)]), "Complete all three behavioral signal fields, or leave them all blank.");
+            return;
+          }
+          if (telemetryAny && (telemetryValues[0] < 0 || telemetryValues[0] > 23 || !Number.isInteger(telemetryValues[0]) || telemetryValues[1] < 0 || telemetryValues[1] > 1 || telemetryValues[2] < 0 || telemetryValues[2] > 1)) {
+            inputError(document.getElementById("hour-of-day"), "Use hour 0–23 and signal values from 0 to 1.");
+            return;
+          }
+          const energy = numericValue("energy-joules");
+          const purity = numericValue("water-tds");
+          if ((energy === null) !== (purity === null)) {
+            inputError(document.getElementById(energy === null ? "energy-joules" : "water-tds"), "Enter both IoT readings or leave both blank.");
+            return;
+          }
+          if ([energy, purity].some((value) => value !== null && (!Number.isFinite(value) || value < 0))) {
+            inputError(document.getElementById("energy-joules"), "IoT readings must be valid non-negative numbers.");
+            return;
+          }
+          const payload = { userPrompt: prompt };
+          if (telemetryAny) payload.deviceTelemetry = { hourOfDay: telemetryValues[0], stressIndex: telemetryValues[1], typingCadenceVariance: telemetryValues[2] };
+          if (energy !== null && purity !== null) {
+            payload.iotSensorData = { energyJoules: energy, waterPurityTds: purity };
+            const nodeId = document.getElementById("node-id").value.trim();
+            if (nodeId) payload.iotSensorData.nodeId = nodeId;
+          }
+          const resultBox = document.getElementById("orchestrate-result");
+          resultBox.classList.remove("visible");
+          const label = "Run simulation";
+          setBusy(form, true, label);
+          try {
+            const data = await postJson("/api/v1/mesh/orchestrate", payload);
+            if (data.status === "FROZEN") {
+              const message = typeof data.message === "string" ? data.message : "The simulated intent was paused.";
+              showResult("orchestrate", "Simulation paused", [message, "No action was executed and no funds moved."], "FROZEN");
+              saveRun(prompt, "FROZEN");
+            } else if (data.status === "SUCCESS" && data.executionPlan) {
+              const plan = data.executionPlan;
+              const lines = ["Intent: " + (typeof plan.intent === "string" ? plan.intent : prompt), "Simulation complete. No funds moved."];
+              if (plan.LiquidityBreakdown && typeof plan.LiquidityBreakdown === "object") {
+                lines.push("Simulated breakdown: " + Object.entries(plan.LiquidityBreakdown).map(([key, value]) => key + " — " + String(value)).join(" · "));
+              }
+              if (typeof plan.iotEscrowStatus === "string") {
+                lines.push("Simulated IoT state: " + plan.iotEscrowStatus);
+                lines.push("No PayPal transaction was submitted.");
+              }
+              else if (plan.iotEscrowStatus && typeof plan.iotEscrowStatus === "object") {
+                if (typeof plan.iotEscrowStatus.status === "string") lines.push("Simulated IoT state: " + plan.iotEscrowStatus.status);
+                if (typeof plan.iotEscrowStatus.reason === "string") lines.push("Simulated hold reason: " + plan.iotEscrowStatus.reason);
+                lines.push("No PayPal transaction was submitted.");
+              }
+              showResult("orchestrate", "Simulation complete", lines, "SUCCESS");
+              saveRun(prompt, "SUCCESS");
+            } else {
+              throw new Error("The service response did not include a recognized simulation result.");
+            }
+          } catch (error) {
+            setError("orchestrate", error.message || "The simulation could not be completed.");
+          } finally {
+            setBusy(form, false, label);
+          }
         });
+
+        onSubmit(document.getElementById("booking-form"), async (form) => {
+          const scope = document.getElementById("project-scope").value.trim();
+          const amount = numericValue("amount-usd");
+          if (!scope) {
+            inputError(document.getElementById("project-scope"), "Enter a project scope.");
+            return;
+          }
+          if (amount === null || !Number.isFinite(amount) || amount <= 0) {
+            inputError(document.getElementById("amount-usd"), "Enter a valid amount greater than zero.");
+            return;
+          }
+          const payload = { projectScope: scope, amountUSD: amount };
+          const clientId = document.getElementById("client-id").value.trim();
+          const freelancerId = document.getElementById("freelancer-id").value.trim();
+          if (clientId) payload.clientId = clientId;
+          if (freelancerId) payload.freelancerId = freelancerId;
+          const label = "Create simulation";
+          document.getElementById("booking-result").classList.remove("visible");
+          setBusy(form, true, label);
+          try {
+            const data = await postJson("/api/v1/bookings/create", payload);
+            if (data.status !== "SUCCESS" || !data.escrowRecord) throw new Error("The service response did not include a booking simulation.");
+            const record = data.escrowRecord;
+            const meta = element("div", "result-meta");
+            if (record.bookingId) meta.append(element("span", "", "Simulation reference: " + String(record.bookingId)));
+            meta.append(element("span", "", "Result: SIMULATION ONLY"));
+            if (record.createdAt) meta.append(element("span", "", "Created: " + formatDate(String(record.createdAt))));
+            const box = document.getElementById("booking-result");
+            box.replaceChildren(element("p", "result-heading", "Booking simulation created"), element("p", "result-copy", "This is a fake response for review only. No funds were deposited, held, or moved."));
+            box.append(meta);
+            box.classList.add("visible");
+          } catch (error) {
+            setError("booking", error.message || "The booking simulation could not be created.");
+          } finally {
+            setBusy(form, false, label);
+          }
+        });
+
+        onSubmit(document.getElementById("dispute-form"), async (form) => {
+          const query = document.getElementById("user-query").value.trim();
+          const reason = document.getElementById("offline-reason").value.trim();
+          if (!query) {
+            inputError(document.getElementById("user-query"), "Describe what needs attention.");
+            return;
+          }
+          if (!reason) {
+            inputError(document.getElementById("offline-reason"), "Add a reason for offline support.");
+            return;
+          }
+          const payload = { userQuery: query, offlineReason: reason };
+          const transactionId = document.getElementById("transaction-id").value.trim();
+          if (transactionId) payload.transactionId = transactionId;
+          const label = "Create ticket simulation";
+          document.getElementById("dispute-result").classList.remove("visible");
+          setBusy(form, true, label);
+          try {
+            const data = await postJson("/api/v1/disputes/offline-escalation", payload);
+            if (data.status !== "SUCCESS" || !data.disputeTicket) throw new Error("The service response did not include a dispute simulation.");
+            const ticket = data.disputeTicket;
+            const box = document.getElementById("dispute-result");
+            box.replaceChildren(element("p", "result-heading", "Escalation simulation created"), element("p", "result-copy", "A simulated ticket response was returned. No external dispute or support case was created."));
+            const meta = element("div", "result-meta");
+            if (ticket.ticketId) meta.append(element("span", "", "Ticket reference: " + String(ticket.ticketId)));
+            meta.append(element("span", "", "Result: SIMULATION ONLY"));
+            if (ticket.dispatchedAt) meta.append(element("span", "", "Timestamp: " + formatDate(String(ticket.dispatchedAt))));
+            box.append(meta);
+            box.classList.add("visible");
+          } catch (error) {
+            setError("dispute", error.message || "The dispute simulation could not be created.");
+          } finally {
+            setBusy(form, false, label);
+          }
+        });
+
+        function utcToday() {
+          return new Date().toISOString().slice(0, 10);
+        }
+        function shiftUtcDate(dateString, days) {
+          const date = new Date(dateString + "T00:00:00.000Z");
+          date.setUTCDate(date.getUTCDate() + days);
+          return date.toISOString().slice(0, 10);
+        }
+        const endDateInput = document.getElementById("end-date");
+        const startDateInput = document.getElementById("start-date");
+        const todayUtc = utcToday();
+        endDateInput.value = todayUtc;
+        endDateInput.max = todayUtc;
+        startDateInput.value = shiftUtcDate(todayUtc, -6);
+        startDateInput.max = todayUtc;
+
+        function clearSummaryOutput() {
+          const output = document.getElementById("summary-output");
+          output.className = "output-placeholder";
+          output.replaceChildren(element("p", "", "Choose a date range to fetch read-only sandbox data. No sample transactions or totals are preloaded."));
+        }
+        function renderSummary(summary) {
+          const output = document.getElementById("summary-output");
+          output.className = "";
+          output.replaceChildren();
+          const overview = element("div", "summary-overview");
+          const stats = [
+            ["Transactions fetched", String(summary.transactionsFetched ?? "—")],
+            ["Omitted transactions", String(summary.omittedTransactions ?? "—")],
+            ["Environment", typeof summary.environment === "string" ? summary.environment : "—"]
+          ];
+          stats.forEach(([label, value]) => {
+            const stat = element("div", "summary-stat");
+            stat.append(element("span", "", label), element("strong", "", value));
+            overview.append(stat);
+          });
+          output.append(overview);
+          const range = summary.dateRange;
+          if (range && typeof range.start === "string" && typeof range.end === "string") {
+            const rangeNode = element("p", "no-totals", "Date range: " + range.start + " to " + range.end + (typeof range.timezone === "string" ? " (" + range.timezone + ")" : ""));
+            output.append(rangeNode);
+          }
+          const totals = Array.isArray(summary.totals) ? summary.totals : [];
+          if (!totals.length) {
+            output.append(element("p", "no-totals", "No transaction totals were returned for this date range."));
+            return;
+          }
+          const wrap = element("div", "totals-table-wrap");
+          const table = element("table", "totals-table");
+          const caption = element("caption", "sr-only", "Sandbox transaction totals by date and status");
+          const head = document.createElement("thead");
+          const headRow = document.createElement("tr");
+          ["Date", "Status", "Count", "Currency", "Total"].forEach((label) => headRow.append(element("th", "", label)));
+          head.append(headRow);
+          const body = document.createElement("tbody");
+          totals.forEach((item) => {
+            const row = document.createElement("tr");
+            [item.date, item.statusLabel || item.status, item.transactionCount, item.currency, item.totalAmount].forEach((value) => row.append(element("td", "", value === undefined || value === null ? "—" : String(value))));
+            body.append(row);
+          });
+          table.append(caption, head, body);
+          wrap.append(table);
+          output.append(wrap);
+        }
+
+        onSubmit(document.getElementById("summary-form"), async (form) => {
+          const start = startDateInput.value;
+          const end = endDateInput.value;
+          if (!start || !end) {
+            inputError(!start ? startDateInput : endDateInput, "Choose both a start and end date.");
+            return;
+          }
+          if (start > end) {
+            inputError(startDateInput, "Start date must be on or before end date.");
+            return;
+          }
+          if (start > shiftUtcDate(end, -30)) {
+            inputError(startDateInput, "Choose a date range of no more than 31 calendar days.");
+            return;
+          }
+          clearError("summary");
+          const buttonLabel = "Generate summary";
+          const state = document.getElementById("report-state");
+          state.textContent = "Requesting";
+          const output = document.getElementById("summary-output");
+          output.className = "output-placeholder";
+          output.replaceChildren(element("p", "", "Fetching read-only sandbox data…"));
+          setBusy(form, true, buttonLabel);
+          try {
+            const data = await postJson("/api/v1/transactions/summary", { startDate: start, endDate: end });
+            if (data.status !== "SUCCESS" || !data.summary) throw new Error("The service response did not include a transaction summary.");
+            state.textContent = "Sandbox / UTC";
+            renderSummary(data.summary);
+          } catch (error) {
+            state.textContent = "Request failed";
+            output.className = "output-placeholder";
+            output.replaceChildren(element("p", "", "No transaction totals are available. Correct the date range or retry the sandbox request."));
+            setError("summary", error.message || "The transaction summary could not be generated.");
+          } finally {
+            setBusy(form, false, buttonLabel);
+          }
+        });
+
+        navLinks.forEach((link) => {
+          link.addEventListener("click", () => {
+            navLinks.forEach((item) => item.classList.remove("active"));
+            link.classList.add("active");
+          });
+        });
+
+        renderRuns();
+      })();
     </script>
   </body>
 </html>

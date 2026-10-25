@@ -62,6 +62,27 @@ author = 64715426
 task = "shell.exec"
 args = "npx tsx scripts/paypal-summary.ts"
 
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Mesh OS Preview"
+
+[[workflows.workflow]]
+name = "Mesh OS Preview"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=3001 pnpm --filter paypal-autonomous-mesh-os run dev"
+waitForPort = 3001
+
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
@@ -69,3 +90,6 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[[ports]]
+localPort = 3000
