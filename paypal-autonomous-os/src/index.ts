@@ -1,64 +1,34 @@
-import { readFile } from "node:fs/promises";
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import "dotenv/config";
+import cors from "cors";
+import express from "express";
+import { resolve } from "node:path";
 
-const currentDirectory = dirname(fileURLToPath(import.meta.url));
-const indexHtml = await readFile(resolve(currentDirectory, "../public/index.html"), "utf8");
+const app = express();
 const port = Number(process.env.PORT ?? "3000");
 
 if (!Number.isInteger(port) || port < 1 || port > 65_535) {
   throw new Error("PORT must be an integer between 1 and 65535");
 }
 
-function sendJson(response: ServerResponse, statusCode: number, value: unknown): void {
-  response.writeHead(statusCode, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    "X-Content-Type-Options": "nosniff",
-  });
-  response.end(JSON.stringify(value));
-}
+app.disable("x-powered-by");
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
+app.use((_request, response, next) => {
+  response.setHeader("Cache-Control", "no-store");
+  response.setHeader("X-Content-Type-Options", "nosniff");
+  next();
+});
 
-function handleRequest(request: IncomingMessage, response: ServerResponse): void {
-  const method = request.method ?? "GET";
-  const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+app.get("/health", (_request, response) => {
+  response.json({ status: "ok", service: "paypal-autonomous-mesh-os" });
+});
 
-  if (method !== "GET" && method !== "HEAD") {
-    response.writeHead(405, {
-      Allow: "GET, HEAD",
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    });
-    response.end(method === "HEAD" ? undefined : "Method not allowed");
-    return;
-  }
+app.use(express.static(resolve(__dirname, "../public")));
+app.use((_request, response) => {
+  response.status(404).json({ error: "Not found" });
+});
 
-  if (pathname === "/health") {
-    sendJson(response, 200, { status: "ok", service: "paypal-autonomous-os" });
-    return;
-  }
-
-  if (pathname !== "/") {
-    response.writeHead(404, {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    });
-    response.end(method === "HEAD" ? undefined : "Not found");
-    return;
-  }
-
-  response.writeHead(200, {
-    "Content-Type": "text/html; charset=utf-8",
-    "Cache-Control": "no-store",
-    "X-Content-Type-Options": "nosniff",
-  });
-  response.end(method === "HEAD" ? undefined : indexHtml);
-}
-
-const server = createServer(handleRequest);
-
-server.listen(port, "0.0.0.0", () => {
+const server = app.listen(port, "0.0.0.0", () => {
   process.stdout.write(`PayPal Autonomous OS starter listening on port ${port}\n`);
 });
 

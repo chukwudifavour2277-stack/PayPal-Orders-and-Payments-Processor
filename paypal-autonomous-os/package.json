@@ -1,18 +1,23 @@
 {
-  "name": "@workspace/paypal-autonomous-os",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "engines": {
-    "node": ">=24"
-  },
+  "name": "paypal-autonomous-mesh-os",
+  "version": "1.0.0",
+  "description": "Autonomous Multi-Currency Intent Mesh & IoT Cooperative Trust Engine for PayPal AI Hackathon",
+  "main": "dist/index.js",
   "scripts": {
-    "dev": "node --env-file-if-exists=.env --watch src/index.ts",
-    "start": "node --env-file-if-exists=.env src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev src/index.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "typescript": "~5.9.3"
+    "@types/cors": "^2.7.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.24",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
   }
 }
