@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "paypal:summary": "tsx ./src/paypal-summary.ts",
+    "paypal:summary": "tsx scripts/paypal-summary.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
